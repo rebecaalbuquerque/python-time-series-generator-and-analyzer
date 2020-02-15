@@ -1,4 +1,4 @@
-# Instalar rpy2 para fazer ponte entre R e Pyhon (Windows)
+# Instalar rpy2 para fazer ponte entre R e Python (Windows)
 
 - Instalar R
 - [Baixar](https://www.lfd.uci.edu/~gohlke/pythonlibs/#rpy2) o binário de acordo com a sua versão do python e colocar na pasta onde o python está instalado no seu computador
