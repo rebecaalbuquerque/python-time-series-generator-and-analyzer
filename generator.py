@@ -2,20 +2,20 @@ import pandas as pd
 import rpy2.robjects as ro
 
 
-def generate_diverse_ts(q, frequence, components, size):
+def generate_diverse_ts(q, frequency, components, size):
     """
     Gera um CSV de séries temporais juntamente com os coeficientes SARIMA usados em cada componente de mixing (modelo
     MAR) e os pesos de mixing correspondentes.
     https://github.com/ykang/gratis/
 
     :param q: quantidade de séries temporais a serem geradas
-    :param frequence: período sazonal das séries temporais a serem geradas
+    :param frequency: período sazonal das séries temporais a serem geradas
     :param components: número de componentes de mixing ao gerar as séries temporais usando o modelo MAR
     :param size: tamanho das séries temporais
     """
 
     path = "output/diverse-ts.csv"
-    ro.r('write.csv(generate_ts(n.ts = {}, freq = {}, nComp = {}, n = {}), "{}")'.format(q, frequence, components, size,
+    ro.r('write.csv(generate_ts(n.ts = {}, freq = {}, nComp = {}, n = {}), "{}")'.format(q, frequency, components, size,
                                                                                          path))
     df = pd.read_csv(path)
     df = df.drop(df.columns[0], axis=1)
@@ -24,11 +24,11 @@ def generate_diverse_ts(q, frequence, components, size):
         dictionary = {}
         for i in range(q):
             key = "N{}.x".format(i + 1)
-            dictionary[key] = "N{}.data".format(i + 1)
+            dictionary[key] = "data{}".format(i + 1)
 
         df = df.rename(columns=dictionary)
     else:
-        df = df.rename(columns={"N1.x": "N1.data"})
+        df = df.rename(columns={"N1.x": "data1"})
 
     df.to_csv(path, index=False, sep=";", encoding="utf-8")
 
@@ -53,14 +53,14 @@ def generate_multi_seasonal_ts(seasonal_periods, size, components):
     df.to_csv(path, index=False, sep=";", encoding="utf-8")
 
 
-def generate_ts_with_controllable_features(q, size, frequence, seasonal, features, selected_features, target):
+def generate_ts_with_controllable_features(q, size, frequency, seasonal, features, selected_features, target):
     """
     Gera um CSV com uma série temporal com features controláveis
     https://github.com/ykang/gratis/
 
     :param q: quantidade de séries temporais a serem geradas
     :param size: tamanho das séries temporais
-    :param frequence: período sazonal das séries temporais a serem geradas
+    :param frequency: período sazonal das séries temporais a serem geradas
     :param seasonal: 0 para dados não sazonais, 1 para dados com um período sazonal e 2 para vários períodos sazonais
     :param features: um vetor com nome de funções
     :param selected_features: vetor com o nome das features a serem controladas
@@ -70,7 +70,7 @@ def generate_ts_with_controllable_features(q, size, frequence, seasonal, feature
     path = "output/controllable-ts.csv"
     ro.r('write.csv(generate_ts_with_target(n = {}, ts.length = {}, freq = {}, seasonal = {}, features = c({}), '
          'selected.features = c({}), target = c({})), "{}")'
-         .format(q, size, frequence, seasonal, str(features)[1:-1], str(selected_features)[1:-1], str(target)[1:-1],
+         .format(q, size, frequency, seasonal, str(features)[1:-1], str(selected_features)[1:-1], str(target)[1:-1],
                  path))
 
     df = pd.read_csv(path)
