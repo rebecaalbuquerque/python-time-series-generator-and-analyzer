@@ -1,34 +1,89 @@
-from rpy2.rinterface import RRuntimeError
-from rpy2.robjects.packages import importr
+import pandas as pd
 import rpy2.robjects as ro
-import rpy2.robjects.packages as r
-import re
-
-utils = r.importr("utils")
 
 
-def import_r_package(package_name, devtools_package=None):
+def generate_diverse_ts(q, frequence, components, size):
+    """
+    Gera um CSV de séries temporais juntamente com os coeficientes SARIMA usados em cada componente de mixing (modelo
+    MAR) e os pesos de mixing correspondentes.
+    https://github.com/ykang/gratis/
 
-    try:
-        if devtools_package is None:
-            r_package = importr(package_name)
-        else:
-            r_package = importr(re.findall("/(.+)", package_name)[0])
+    :param q: quantidade de séries temporais a serem geradas
+    :param frequence: período sazonal das séries temporais a serem geradas
+    :param components: número de componentes de mixing ao gerar as séries temporais usando o modelo MAR
+    :param size: tamanho das séries temporais
+    """
 
-    except RRuntimeError:
+    path = "output/diverse-ts.csv"
+    ro.r('write.csv(generate_ts(n.ts = {}, freq = {}, nComp = {}, n = {}), "{}")'.format(q, frequence, components, size,
+                                                                                         path))
+    df = pd.read_csv(path)
+    df = df.drop(df.columns[0], axis=1)
 
-        if devtools_package is None:
-            utils.install_packages(package_name)
-        else:
-            devtools_package.install_github(package_name)
-            package_name = re.findall("/(.+)", package_name)[0]
+    if q > 1:
+        dictionary = {}
+        for i in range(q):
+            key = "N{}.x".format(i + 1)
+            dictionary[key] = "N{}.data".format(i + 1)
 
-        r_package = importr(package_name)
+        df = df.rename(columns=dictionary)
+    else:
+        df = df.rename(columns={"N1.x": "N1.data"})
 
-    return r_package
+    df.to_csv(path, index=False, sep=";", encoding="utf-8")
 
 
-devtools = import_r_package("devtools")
-import_r_package("ykang/gratis", devtools)
+def generate_multi_seasonal_ts(seasonal_periods, size, components):
+    """
+    Gera um CSV com uma série série temporal com vários períodos sazonais
+    https://github.com/ykang/gratis/
 
-ro.r('write.csv(generate_msts(seasonal.periods = c(7, 365), n = 108, nComp = 2), "output/ts.csv")')
+    :param seasonal_periods: uma lista de períodos sazonais da série temporal a ser gerada.
+    :param size: tamanho da série temporal
+    :param components: número de componentes de mixing ao gerar as séries temporais usando o modelo MAR
+    """
+
+    path = "output/multi-seasonal-ts.csv"
+    ro.r('write.csv(generate_msts(seasonal.periods = c({}), n = {}, nComp = {}), "{}")'.format(
+        str(seasonal_periods)[1:-1], size, components, path))
+
+    df = pd.read_csv(path)
+    df = df.drop(df.columns[0], axis=1)
+    df = df.rename(columns={"x": "data"})
+    df.to_csv(path, index=False, sep=";", encoding="utf-8")
+
+
+def generate_ts_with_controllable_features(q, size, frequence, seasonal, features, selected_features, target):
+    """
+    Gera um CSV com uma série temporal com features controláveis
+    https://github.com/ykang/gratis/
+
+    :param q: quantidade de séries temporais a serem geradas
+    :param size: tamanho das séries temporais
+    :param frequence: período sazonal das séries temporais a serem geradas
+    :param seasonal: 0 para dados não sazonais, 1 para dados com um período sazonal e 2 para vários períodos sazonais
+    :param features: um vetor com nome de funções
+    :param selected_features: vetor com o nome das features a serem controladas
+    :param target: valores das featues alvo
+    """
+
+    path = "output/controllable-ts.csv"
+    ro.r('write.csv(generate_ts_with_target(n = {}, ts.length = {}, freq = {}, seasonal = {}, features = c({}), '
+         'selected.features = c({}), target = c({})), "{}")'
+         .format(q, size, frequence, seasonal, str(features)[1:-1], str(selected_features)[1:-1], str(target)[1:-1],
+                 path))
+
+    df = pd.read_csv(path)
+    df = df.drop(df.columns[0], axis=1)
+
+    if q > 1:
+        dictionary = {}
+        for i in range(q):
+            key = "Series {}".format(i + 1)
+            dictionary[key] = "data{}".format(i + 1)
+
+        df = df.rename(columns=dictionary)
+    else:
+        df = df.rename(columns={"x": "data"})
+
+    df.to_csv(path, index=False, sep=";", encoding="utf-8")
