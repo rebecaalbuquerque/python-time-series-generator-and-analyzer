@@ -28,9 +28,11 @@ def generate_diverse_ts(q, frequency, components, size):
 
         df = df.rename(columns=dictionary)
     else:
-        df = df.rename(columns={"N1.x": "data1"})
+        df = df.rename(columns={"N1.x": "data"})
 
     df.to_csv(path, index=False, sep=";", encoding="utf-8")
+
+    return df
 
 
 def generate_multi_seasonal_ts(seasonal_periods, size, components):
@@ -51,6 +53,8 @@ def generate_multi_seasonal_ts(seasonal_periods, size, components):
     df = df.drop(df.columns[0], axis=1)
     df = df.rename(columns={"x": "data"})
     df.to_csv(path, index=False, sep=";", encoding="utf-8")
+
+    return df
 
 
 def generate_ts_with_controllable_features(q, size, frequency, seasonal, features, selected_features, target):
@@ -87,3 +91,4 @@ def generate_ts_with_controllable_features(q, size, frequency, seasonal, feature
         df = df.rename(columns={"x": "data"})
 
     df.to_csv(path, index=False, sep=";", encoding="utf-8")
+    return df
