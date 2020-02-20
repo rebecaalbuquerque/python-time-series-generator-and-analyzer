@@ -1,6 +1,7 @@
 import pandas as pd
 import rpy2.robjects as ro
-from enum import EnumMeta
+
+from features import Function
 
 
 def generate_diverse_ts(q, frequency, components, size):
@@ -70,23 +71,25 @@ def generate_ts_with_controllable_features(q, size, frequency, seasonal, feature
     :param features: um vetor com nome das features a serem controladas
     :param target: valores das features alvo
     """
-    #TODO: corrigir functions values
+
     functions_values = []
     features_values = []
 
     for f in features:
-        functions_values.append(f.name)
 
-        if isinstance(f.value, EnumMeta):
-            features_values.extend([e.value for e in f.value])
+        if isinstance(f, Function):
+            functions_values.append(f.name)
         else:
-            features_values.append(f.value)
+            if f.get_name() not in functions_values:
+                functions_values.append(f.get_name())
+
+        features_values.append(f.value)
 
     path = "output/controllable-ts.csv"
     ro.r('write.csv(generate_ts_with_target(n = {}, ts.length = {}, freq = {}, seasonal = {}, features = c({}), '
          'selected.features = c({}), target = c({})), "{}")'
-         .format(q, size, frequency, seasonal, ",".join(functions_values), ",".join(features_values), str(target)[1:-1],
-                 path))
+         .format(q, size, frequency, seasonal, ','.join('"{0}"'.format(w) for w in functions_values),
+                 ','.join('"{0}"'.format(w) for w in features_values), str(target)[1:-1], path))
 
     df = pd.read_csv(path)
     df = df.drop(df.columns[0], axis=1)

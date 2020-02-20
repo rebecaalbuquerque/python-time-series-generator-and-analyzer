@@ -1,7 +1,6 @@
 import rpy2.robjects.packages as r
 from matplotlib import pyplot as plt
 
-from features import Function
 from generator import *
 from importer_R_package import import_r_package
 
@@ -23,8 +22,9 @@ df = generate_ts_with_controllable_features(
     size=60,
     frequency=1,
     seasonal=0,
-    features=[Function.time_level_shift, Function.max_var_shift, Function.heterogeneity.value.arch_acf,
-              Function.heterogeneity.value.garch_r2, Function.heterogeneity.value.arch_r2],
+    features=[Function.max_level_shift.value.time_level_shift, Function.max_var_shift,
+              Function.heterogeneity.value.arch_acf, Function.heterogeneity.value.garch_r2,
+              Function.heterogeneity.value.arch_r2],
     target=[20, 3, 0.3, 0.5, 0.5]
 )
 
