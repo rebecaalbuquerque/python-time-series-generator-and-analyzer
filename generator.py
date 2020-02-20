@@ -1,5 +1,6 @@
 import pandas as pd
 import rpy2.robjects as ro
+from enum import EnumMeta
 
 
 def generate_diverse_ts(q, frequency, components, size):
@@ -57,7 +58,7 @@ def generate_multi_seasonal_ts(seasonal_periods, size, components):
     return df
 
 
-def generate_ts_with_controllable_features(q, size, frequency, seasonal, features, selected_features, target):
+def generate_ts_with_controllable_features(q, size, frequency, seasonal, features, target):
     """
     Gera um CSV com uma série temporal com features controláveis
     https://github.com/ykang/gratis/
@@ -66,15 +67,25 @@ def generate_ts_with_controllable_features(q, size, frequency, seasonal, feature
     :param size: tamanho das séries temporais
     :param frequency: período sazonal das séries temporais a serem geradas
     :param seasonal: 0 para dados não sazonais, 1 para dados com um período sazonal e 2 para vários períodos sazonais
-    :param features: um vetor com nome de funções
-    :param selected_features: vetor com o nome das features a serem controladas
-    :param target: valores das featues alvo
+    :param features: um vetor com nome das features a serem controladas
+    :param target: valores das features alvo
     """
+    #TODO: corrigir functions values
+    functions_values = []
+    features_values = []
+
+    for f in features:
+        functions_values.append(f.name)
+
+        if isinstance(f.value, EnumMeta):
+            features_values.extend([e.value for e in f.value])
+        else:
+            features_values.append(f.value)
 
     path = "output/controllable-ts.csv"
     ro.r('write.csv(generate_ts_with_target(n = {}, ts.length = {}, freq = {}, seasonal = {}, features = c({}), '
          'selected.features = c({}), target = c({})), "{}")'
-         .format(q, size, frequency, seasonal, str(features)[1:-1], str(selected_features)[1:-1], str(target)[1:-1],
+         .format(q, size, frequency, seasonal, ",".join(functions_values), ",".join(features_values), str(target)[1:-1],
                  path))
 
     df = pd.read_csv(path)
