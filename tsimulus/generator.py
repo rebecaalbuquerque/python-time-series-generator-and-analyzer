@@ -6,7 +6,7 @@ def generate_ts(new_file=True):
     if new_file:
         subprocess.call(['java', '-jar', 'tsimulus.jar', 'ts.json'])
 
-    df = pd.read_csv("output\\output.csv", sep=";")
+    df = pd.read_csv("output\\output.csv", sep=";", parse_dates=[0])
     dfs = []
 
     if "series" in df.columns:

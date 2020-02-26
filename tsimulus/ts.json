@@ -1,44 +1,21 @@
 {
-  "generators" : [
+  "generators": [
     {
-      "name": "daily-generator",
-      "type": "daily",
-      "points": {"10:00:00.000": 4, "17:00:00.000": 32}
-    },
-    {
-      "name": "noisy-daily",
-      "type": "aggregate",
-      "aggregator" : "sum",
-      "generators": [
-        "daily-generator",
-        {
-          "type": "arma",
-          "model": { "phi": [0.5], "std": 0.25, "c" : 0, "seed": 159357},
-          "timestep": 180000,
-          "origin": "2016-01-01 12:34:56.789"
-        }
-      ]
-    },
-    {
-      "name":  "partial-daily",
-      "type": "partial",
-      "generator" : "daily-generator",
-      "from": "2016-01-01 00:00:00.000",
-      "to": "2017-01-01 00:00:00.000"
+      "name": "week",
+      "type": "week",
+      "base": {
+        "name": "now",
+        "type": "now"
+      }
     }
   ],
-  "exported" : [
+  "exported": [
     {
-      "name": "series-A",
-      "generator": "daily-generator",
-      "frequency": 60000
-    },
-    {
-      "name": "series-B",
-      "generator": "noisy-daily",
-      "frequency": 30000
+      "name": "current time",
+      "generator": "week",
+      "frequency": 1000
     }
   ],
-  "from" : "2016-01-01 00:00:00.000",
-  "to" : "2016-10-01 00:00:00.000"
+  "from": "2016-01-01 00:00:00.000",
+  "to": "2016-01-02 00:00:00.000"
 }
