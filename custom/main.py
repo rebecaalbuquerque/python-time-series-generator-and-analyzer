@@ -114,7 +114,7 @@ def _ts_with_daily_seasonality(size):
 
 
 series_sin, series_noise, series_sin_noise = generate_seasonal_ts(seasonality=Seasonality.weekly,
-                                                                  size=84)
+                                                                  size=104)
 
 plot_vertically(plt, [series_sin, series_noise, series_sin_noise], ["Sin", "Noise", "Sin + Noise"])
 plt.show()
