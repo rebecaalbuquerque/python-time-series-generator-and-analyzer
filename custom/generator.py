@@ -4,12 +4,10 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 import datetime
-
-
-# De quanto em quanto tempo o padrão da série temporal se repete
 from scipy.stats import truncnorm
 
 
+# De quanto em quanto tempo o padrão da série temporal se repete
 class Seasonality(Enum):
     year = "year"
     quarter_of_year = "quarter_of_year"
@@ -65,3 +63,36 @@ def generate_seasonal_ts(seasonality, size):
             sine_noise.append(noise[i])
 
     return pd.Series(sine, dates), pd.Series(noise, dates), pd.Series(sine_noise, dates)
+
+
+def generate_elasticity_ts(size, dependency_min, dependency_max):
+    variation = random.randint(dependency_min, dependency_max)
+    # TODO: quantas vezes vai variar?
+    number_variations = 6
+    data = size * [variation]
+
+    # Gera e ordena os indices que vão variar
+    indexes = sorted(random.sample(range(0, size - 1), number_variations))
+
+    # Organiza os indices que vão variar em pares, pois cada par significa o começo e o final de uma variação
+    indexes_pair = [{x, y} for x, y in zip(indexes[::2], indexes[1::2])]
+
+    for pair in indexes_pair:
+        pair = sorted(pair)
+
+        for i in range(pair[0], pair[1]):
+            data[i] = data[i] * 1.3
+
+            # Decidir se vai variar pra mais ou menos
+            if bool(random.getrandbits(1)):
+                # Varia pra mais. Variação mínima = variacao,  Variação máxima = dependencia_max
+                percentage_variation = float(f"1.{random.randint(1, 9)}") * 1
+                variation_value = random.randint(variation, dependency_max)
+            else:
+                # Varia pra mais. Variação mínima = dependencia_min,  Variação máxima = variacao
+                percentage_variation = float(f"0.{random.randint(1, 9)}") * -1
+                variation_value = random.randint(dependency_min, variation)
+
+            data[i] = data[i] * (variation_value * percentage_variation)
+
+    return pd.Series(data).plot()

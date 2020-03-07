@@ -17,3 +17,4 @@ plt.show()
 
 series_sine_noise.plot()
 plt.show()
+plt.close()

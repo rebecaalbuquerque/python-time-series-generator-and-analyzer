@@ -10,7 +10,11 @@ def plot_vertically(plt, plots, titles=None, style=None):
         if style is None:
             style = ""
 
-        p.plot(style=f"{colors[random.randint(0, len(colors) - 1)]}{style}")
+        if isinstance(p, list):
+            for sb in p:
+                sb.plot(style=f"{colors[random.randint(0, len(colors) - 1)]}{style}")
+        else:
+            p.plot(style=f"{colors[random.randint(0, len(colors) - 1)]}{style}")
 
         if titles is not None:
             plt.title(titles[i - 1])
