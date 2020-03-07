@@ -67,8 +67,8 @@ def generate_seasonal_ts(seasonality, size):
 
 def generate_elasticity_ts(size, dependency_min, dependency_max):
     variation = random.randint(dependency_min, dependency_max)
-    # TODO: quantas vezes vai variar?
-    number_variations = 6
+    # TODO: quantas vezes vai variar? pensar em uma forma proporcional ao size
+    number_variations = 4
     data = size * [variation]
 
     # Gera e ordena os indices que vão variar
@@ -80,19 +80,18 @@ def generate_elasticity_ts(size, dependency_min, dependency_max):
     for pair in indexes_pair:
         pair = sorted(pair)
 
+        # Decidir se vai variar pra mais ou menos
+        if bool(random.getrandbits(1)):
+            # Varia pra mais. Variação mínima = variacao,  Variação máxima = dependencia_max
+            percentage_variation = float(f"1.{random.randint(1, 9)}") * 1
+            variation_value = random.randint(variation, dependency_max)
+        else:
+            # Varia pra mais. Variação mínima = dependencia_min,  Variação máxima = variacao
+            percentage_variation = float(f"0.{random.randint(1, 9)}") * -1
+            variation_value = random.randint(dependency_min, variation)
+
+        # Faz a variação
         for i in range(pair[0], pair[1]):
-            data[i] = data[i] * 1.3
-
-            # Decidir se vai variar pra mais ou menos
-            if bool(random.getrandbits(1)):
-                # Varia pra mais. Variação mínima = variacao,  Variação máxima = dependencia_max
-                percentage_variation = float(f"1.{random.randint(1, 9)}") * 1
-                variation_value = random.randint(variation, dependency_max)
-            else:
-                # Varia pra mais. Variação mínima = dependencia_min,  Variação máxima = variacao
-                percentage_variation = float(f"0.{random.randint(1, 9)}") * -1
-                variation_value = random.randint(dependency_min, variation)
-
-            data[i] = data[i] * (variation_value * percentage_variation)
+            data[i] = data[pair[0]] * (variation_value * percentage_variation)
 
     return pd.Series(data).plot()
