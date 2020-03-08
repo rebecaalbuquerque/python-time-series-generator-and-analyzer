@@ -15,11 +15,12 @@ class Seasonality(Enum):
     weekly = "weekly"
 
 
-def generate_seasonal_ts(seasonality, size):
+def get_truncated_normal(mean=0, standard_deviation=1, floor=0, ceil=10, n=1):
+    return truncnorm((floor - mean) / standard_deviation, (ceil - mean) / standard_deviation, loc=mean,
+                     scale=standard_deviation).rvs(n).tolist()
 
-    def get_truncated_normal(mean=0, standard_deviation=1, floor=0, ceil=10, n=1):
-        return truncnorm((floor - mean) / standard_deviation, (ceil - mean) / standard_deviation, loc=mean,
-                         scale=standard_deviation).rvs(n).tolist()
+
+def generate_seasonal_ts(seasonality, size):
 
     if seasonality == Seasonality.year:
         lag = 12
@@ -65,12 +66,13 @@ def generate_seasonal_ts(seasonality, size):
     return pd.Series(sine, dates), pd.Series(noise, dates), pd.Series(sine_noise, dates)
 
 
-def generate_elasticity_ts(size, dependency_min, dependency_max):
+def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, resulting_max):
     variation = random.randint(dependency_min, dependency_max)
     # TODO: quantas vezes vai variar? pensar em uma forma proporcional ao size
     number_variations = 4
-    data = size * [variation]
+    list_variant = size * [variation]
 
+    # ================ GERAÇÃO TS MANDANTE ================ #
     # Gera e ordena os indices que vão variar
     indexes = sorted(random.sample(range(0, size - 1), number_variations))
 
@@ -92,6 +94,20 @@ def generate_elasticity_ts(size, dependency_min, dependency_max):
 
         # Faz a variação
         for i in range(pair[0], pair[1]):
-            data[i] = data[pair[0]] * (variation_value * percentage_variation)
+            list_variant[i] = list_variant[pair[0]] + (variation_value * percentage_variation)
 
-    return pd.Series(data).plot()
+    # =============== GERAÇÃO TS DEPENDENTE =============== #
+    list_resulting = get_truncated_normal(mean=int(resulting_max / 2), standard_deviation=int(resulting_max / 2),
+                                          floor=0, ceil=resulting_max, n=size)
+
+    ts_resulting = pd.Series(list_resulting)
+    ts_variant = pd.Series(list_variant)
+
+    df = pd.concat([ts_resulting, ts_variant], axis=1).reset_index()
+    df.columns = ["index", "resulting", "variant"]
+    df = df.drop(["index"], axis=1)
+
+    for coluna in df.columns:
+        df[coluna] = df[coluna] / (max(df[coluna]))
+
+    return ts_resulting, ts_variant, [df.resulting, df.variant]
