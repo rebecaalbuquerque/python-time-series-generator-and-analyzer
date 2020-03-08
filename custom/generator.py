@@ -68,9 +68,14 @@ def generate_seasonal_ts(seasonality, size):
 
 def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, resulting_max):
     variation = random.randint(dependency_min, dependency_max)
+    print(variation)
     # TODO: quantas vezes vai variar? pensar em uma forma proporcional ao size
     number_variations = 4
     list_variant = size * [variation]
+
+    # =============== GERAÇÃO TS RESULTANTE =============== #
+    list_resulting = get_truncated_normal(mean=int(resulting_max / 2), standard_deviation=int(resulting_max / 2),
+                                          floor=resulting_min, ceil=resulting_max, n=size)
 
     # ================ GERAÇÃO TS MANDANTE ================ #
     # Gera e ordena os indices que vão variar
@@ -96,9 +101,12 @@ def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, 
         for i in range(pair[0], pair[1]):
             list_variant[i] = list_variant[pair[0]] + (variation_value * percentage_variation)
 
-    # =============== GERAÇÃO TS DEPENDENTE =============== #
-    list_resulting = get_truncated_normal(mean=int(resulting_max / 2), standard_deviation=int(resulting_max / 2),
-                                          floor=0, ceil=resulting_max, n=size)
+            if list_variant[i] > variation:
+                # resulting tem que baixar
+                # TODO: tirar 200 e colocar outro valor
+                list_resulting[i] = list_resulting[i] - 200
+            else:
+                list_resulting[i] = list_resulting[i] + 200
 
     ts_resulting = pd.Series(list_resulting)
     ts_variant = pd.Series(list_variant)

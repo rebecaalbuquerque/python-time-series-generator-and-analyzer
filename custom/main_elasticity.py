@@ -11,7 +11,12 @@ resulting, dependency, output = generate_elasticity_ts(
     resulting_max=200
 )
 
-plot_vertically(plt, [resulting, dependency, output], ["Resultante (Venda)", "Mandante (Preço)", "Resultante e Mandante"])
+plot_vertically(
+    plt,
+    [resulting, dependency, output],
+    ["Resultante (Venda)", "Mandante (Preço)", "Resultante e Mandante"]
+)
 
 plt.show()
+
 plt.close()
