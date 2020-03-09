@@ -15,7 +15,7 @@ class Seasonality(Enum):
     weekly = "weekly"
 
 
-def get_truncated_normal(mean=0, standard_deviation=1, floor=0, ceil=10, n=1):
+def _get_truncated_normal(mean=0, standard_deviation=1, floor=0, ceil=10, n=1):
     return truncnorm((floor - mean) / standard_deviation, (ceil - mean) / standard_deviation, loc=mean,
                      scale=standard_deviation).rvs(n).tolist()
 
@@ -48,7 +48,7 @@ def generate_seasonal_ts(seasonality, size):
     # ======================================== NOISE ======================================== #
     # 0: mean of the normal distribution, 1: standard deviation of the normal distribution, 2: number of elements
     max_noise = maximum_peak * 0.7
-    noise = get_truncated_normal(mean=int(max_noise / 2), standard_deviation=int(max_noise / 2), floor=0,
+    noise = _get_truncated_normal(mean=int(max_noise / 2), standard_deviation=int(max_noise / 2), floor=0,
                                  ceil=max_noise, n=size)
 
     # ===================================== SIN + NOISE ===================================== #
@@ -68,14 +68,13 @@ def generate_seasonal_ts(seasonality, size):
 
 def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, resulting_max):
     variation = random.randint(dependency_min, dependency_max)
-    print(variation)
     # TODO: quantas vezes vai variar? pensar em uma forma proporcional ao size
     number_variations = 4
     list_variant = size * [variation]
 
     # =============== GERAÇÃO TS RESULTANTE =============== #
-    list_resulting = get_truncated_normal(mean=int(resulting_max / 2), standard_deviation=int(resulting_max / 2),
-                                          floor=resulting_min, ceil=resulting_max, n=size)
+    list_resulting = _get_truncated_normal(mean=int(resulting_max / 2), standard_deviation=int(resulting_max / 2),
+                                           floor=resulting_min, ceil=resulting_max, n=size)
 
     # ================ GERAÇÃO TS MANDANTE ================ #
     # Gera e ordena os indices que vão variar
@@ -103,10 +102,10 @@ def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, 
 
             if list_variant[i] > variation:
                 # resulting tem que baixar
-                # TODO: tirar 200 e colocar outro valor
-                list_resulting[i] = list_resulting[i] - 200
+                list_resulting[i] = list_resulting[i] * 0.2
             else:
-                list_resulting[i] = list_resulting[i] + 200
+                # aumenta resulting de acordo com a proporçao que o variante baixou
+                list_resulting[i] = list_resulting[i] * 1.8
 
     ts_resulting = pd.Series(list_resulting)
     ts_variant = pd.Series(list_variant)
