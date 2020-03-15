@@ -21,7 +21,6 @@ def _get_truncated_normal(mean=0, standard_deviation=1, floor=0, ceil=10, n=1):
 
 
 def generate_seasonal_ts(seasonality, size):
-
     if seasonality == Seasonality.year:
         lag = 12
         start_year = f"{datetime.datetime.today().year - math.floor(size / lag)}-01-01"
@@ -49,7 +48,7 @@ def generate_seasonal_ts(seasonality, size):
     # 0: mean of the normal distribution, 1: standard deviation of the normal distribution, 2: number of elements
     max_noise = maximum_peak * 0.7
     noise = _get_truncated_normal(mean=int(max_noise / 2), standard_deviation=int(max_noise / 2), floor=0,
-                                 ceil=max_noise, n=size)
+                                  ceil=max_noise, n=size)
 
     # ===================================== SIN + NOISE ===================================== #
     sine_noise = []
@@ -66,10 +65,23 @@ def generate_seasonal_ts(seasonality, size):
     return pd.Series(sine, dates), pd.Series(noise, dates), pd.Series(sine_noise, dates)
 
 
-def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, resulting_max):
+def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, resulting_max,
+                           inversely_proportional_constant):
+
+    def _getVariation():
+        # Decidir se vai variar pra mais ou menos
+        if bool(random.getrandbits(1)):
+            # Varia pra mais. Variação mínima = variacao,  Variação máxima = dependencia_max
+            var_percentage = float(f"1.{random.randint(1, 9)}") * 1
+            var_value = random.randint(variation, dependency_max)
+        else:
+            # Varia pra mais. Variação mínima = dependencia_min,  Variação máxima = variacao
+            var_percentage = float(f"0.{random.randint(1, 9)}") * (-1)
+            var_value = random.randint(dependency_min, variation)
+
+        return var_percentage, var_value
+
     variation = random.randint(dependency_min, dependency_max)
-    # TODO: quantas vezes vai variar? pensar em uma forma proporcional ao size
-    number_variations = 4
     list_variant = size * [variation]
 
     # =============== GERAÇÃO TS RESULTANTE =============== #
@@ -77,35 +89,27 @@ def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, 
                                            floor=resulting_min, ceil=resulting_max, n=size)
 
     # ================ GERAÇÃO TS MANDANTE ================ #
-    # Gera e ordena os indices que vão variar
-    indexes = sorted(random.sample(range(0, size - 1), number_variations))
+    variation_time = random.randint(0, int(size))
+    variation_percentage, variation_value = _getVariation()
 
-    # Organiza os indices que vão variar em pares, pois cada par significa o começo e o final de uma variação
-    indexes_pair = [{x, y} for x, y in zip(indexes[::2], indexes[1::2])]
+    for i in range(size):
+        variation_range = range(i, i + variation_time)
 
-    for pair in indexes_pair:
-        pair = sorted(pair)
+        for j in variation_range:
 
-        # Decidir se vai variar pra mais ou menos
-        if bool(random.getrandbits(1)):
-            # Varia pra mais. Variação mínima = variacao,  Variação máxima = dependencia_max
-            percentage_variation = float(f"1.{random.randint(1, 9)}") * 1
-            variation_value = random.randint(variation, dependency_max)
-        else:
-            # Varia pra mais. Variação mínima = dependencia_min,  Variação máxima = variacao
-            percentage_variation = float(f"0.{random.randint(1, 9)}") * -1
-            variation_value = random.randint(dependency_min, variation)
+            if i + variation_range.stop < size:
 
-        # Faz a variação
-        for i in range(pair[0], pair[1]):
-            list_variant[i] = list_variant[pair[0]] + (variation_value * percentage_variation)
+                if j == variation_time:
+                    variation_time = random.randint(j, int(size))
+                    variation_percentage, variation_value = _getVariation()
+                else:
+                    list_variant[j] = list_variant[j] + (variation_value * variation_percentage)
 
-            if list_variant[i] > variation:
-                # resulting tem que baixar
-                list_resulting[i] = list_resulting[i] * 0.2
-            else:
-                # aumenta resulting de acordo com a proporçao que o variante baixou
-                list_resulting[i] = list_resulting[i] * 1.8
+    for j in range(size):
+        # Aplicando a fórmula de inversão proporcional y = C/x
+        y = (inversely_proportional_constant / list_variant[j])
+        list_resulting[j] = round(random.uniform(y*0.95, y*1.05), 2)
+        # list_resulting[j] = y
 
     ts_resulting = pd.Series(list_resulting)
     ts_variant = pd.Series(list_variant)
@@ -113,6 +117,7 @@ def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, 
     df = pd.concat([ts_resulting, ts_variant], axis=1).reset_index()
     df.columns = ["index", "resulting", "variant"]
     df = df.drop(["index"], axis=1)
+    df.to_csv("result.csv", sep=";", index=False)
 
     for coluna in df.columns:
         df[coluna] = df[coluna] / (max(df[coluna]))
