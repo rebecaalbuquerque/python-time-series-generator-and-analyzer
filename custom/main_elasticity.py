@@ -8,7 +8,8 @@ resulting, dependency, output = generate_elasticity_ts(
     dependency_min=10,
     dependency_max=20,
     resulting_min=20,
-    resulting_max=200
+    resulting_max=200,
+    inversely_proportional_constant=250
 )
 
 plot_vertically(

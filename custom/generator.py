@@ -62,6 +62,9 @@ def generate_seasonal_ts(seasonality, size):
         else:
             sine_noise.append(noise[i])
 
+    df = pd.DataFrame({"date": dates, "value": sine_noise})
+    df.to_csv("seasonality_result.csv", sep=";", index=False)
+
     return pd.Series(sine, dates), pd.Series(noise, dates), pd.Series(sine_noise, dates)
 
 
@@ -117,7 +120,7 @@ def generate_elasticity_ts(size, dependency_min, dependency_max, resulting_min, 
     df = pd.concat([ts_resulting, ts_variant], axis=1).reset_index()
     df.columns = ["index", "resulting", "variant"]
     df = df.drop(["index"], axis=1)
-    df.to_csv("result.csv", sep=";", index=False)
+    df.to_csv("elasticity_result.csv", sep=";", index=False)
 
     for coluna in df.columns:
         df[coluna] = df[coluna] / (max(df[coluna]))
